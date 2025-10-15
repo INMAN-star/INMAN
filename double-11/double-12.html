@@ -128,6 +128,11 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
+            transition: opacity 0.3s;
+        }
+        
+        .qrcode-container img.loading {
+            opacity: 0.5;
         }
         
         .reward-text {
@@ -263,55 +268,8 @@
         
         <div class="count-info">您还有 <span id="remaining-count">3</span> 次机会</div>
         
-        <div class="red-packets">
-            <div class="red-packet" data-index="0">
-                <div class="red-packet-content">
-                    <div class="qrcode-container">
-                        <img id="qrcode-0" src="" alt="二维码">
-                    </div>
-                    <div class="reward-text" id="reward-text-0">扫码领取津贴</div>
-                </div>
-            </div>
-            <div class="red-packet" data-index="1">
-                <div class="red-packet-content">
-                    <div class="qrcode-container">
-                        <img id="qrcode-1" src="" alt="二维码">
-                    </div>
-                    <div class="reward-text" id="reward-text-1">扫码领取津贴</div>
-                </div>
-            </div>
-            <div class="red-packet" data-index="2">
-                <div class="red-packet-content">
-                    <div class="qrcode-container">
-                        <img id="qrcode-2" src="" alt="二维码">
-                    </div>
-                    <div class="reward-text" id="reward-text-2">扫码领取津贴</div>
-                </div>
-            </div>
-            <div class="red-packet" data-index="3">
-                <div class="red-packet-content">
-                    <div class="qrcode-container">
-                        <img id="qrcode-3" src="" alt="二维码">
-                    </div>
-                    <div class="reward-text" id="reward-text-3">扫码领取津贴</div>
-                </div>
-            </div>
-            <div class="red-packet" data-index="4">
-                <div class="red-packet-content">
-                    <div class="qrcode-container">
-                        <img id="qrcode-4" src="" alt="二维码">
-                    </div>
-                    <div class="reward-text" id="reward-text-4">扫码领取津贴</div>
-                </div>
-            </div>
-            <div class="red-packet" data-index="5">
-                <div class="red-packet-content">
-                    <div class="qrcode-container">
-                        <img id="qrcode-5" src="" alt="二维码">
-                    </div>
-                    <div class="reward-text" id="reward-text-5">扫码领取津贴</div>
-                </div>
-            </div>
+        <div class="red-packets" id="red-packets-container">
+            <!-- 红包将通过JavaScript动态生成 -->
         </div>
         
         <div class="rules">
@@ -335,8 +293,20 @@
     </div>
 
     <script>
+        // 图片预加载函数 - 异步执行，不阻塞页面初始化
+        function preloadImages(urls) {
+            // 使用setTimeout将预加载放到下一个事件循环，不阻塞页面渲染
+            setTimeout(() => {
+                urls.forEach(url => {
+                    const img = new Image();
+                    img.src = url;
+                });
+                console.log('图片预加载完成');
+            }, 100);
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
-            const redPackets = document.querySelectorAll('.red-packet');
+            const redPacketsContainer = document.getElementById('red-packets-container');
             const resultModal = document.getElementById('result-modal');
             const modalTitle = document.getElementById('modal-title');
             const modalText = document.getElementById('modal-text');
@@ -344,37 +314,37 @@
             const modalClose = document.getElementById('modal-close');
             const remainingCountEl = document.getElementById('remaining-count');
             
-            // 红包内容配置 - 请修改这些路径为您的二维码图片路径
+            // 红包内容配置 - 使用CDN路径
             const packetContents = [
                 {
-                    reward: "10元无门槛",
-                    qrcodePath: "./images/1.png", // 替换为您的二维码图片路径
-                    text: "扫码领取10元无门槛津贴"
+                    reward: "100元购衣津贴",
+                    qrcodePath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/1.webp",
+                    text: "扫码领取津贴"
                 },
                 {
-                    reward: "20元(满500可用)",
-                    qrcodePath: "./images/2.png", // 替换为您的二维码图片路径
-                    text: "扫码领取20元津贴"
+                    reward: "50元购衣津贴",
+                    qrcodePath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/2.webp",
+                    text: "扫码领取津贴"
                 },
                 {
-                    reward: "50元(满1000元可用)",
-                    qrcodePath: "./images/3.png", // 替换为您的二维码图片路径
-                    text: "扫码领取50元津贴"
+                    reward: "30元购衣津贴",
+                    qrcodePath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/3.webp",
+                    text: "扫码领取津贴"
                 },
                 {
-                    reward: "100元(满2000元可用)",
-                    qrcodePath: "./images/4.png", // 替换为您的二维码图片路径
-                    text: "扫码领取100元津贴"
+                    reward: "20元购衣津贴",
+                    qrcodePath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/4.webp",
+                    text: "扫码领取津贴"
                 },
                 {
-                    reward: "留香珠5折权益(限2瓶)",
-                    qrcodePath: "./images/5.png", // 替换为您的二维码图片路径
-                    text: "扫码领取留香珠5折权益"
+                    reward: "10元购衣津贴",
+                    qrcodePath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/5.webp",
+                    text: "扫码领取津贴"
                 },
                 {
-                    reward: "留香珠体验装",
-                    qrcodePath: "./images/6.png", // 替换为您的二维码图片路径
-                    text: "扫码领取留香珠体验装"
+                    reward: "5元购衣津贴",
+                    qrcodePath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/6.webp",
+                    text: "扫码领取津贴"
                 }
             ];
             
@@ -385,51 +355,122 @@
             // 更新显示
             remainingCountEl.textContent = remainingCount;
             
-            // 显示已翻开的红包
-            openedPackets.forEach(index => {
-                const packet = redPackets[index];
-                packet.classList.add('opened');
-                document.getElementById(`qrcode-${index}`).src = packetContents[index].qrcodePath;
-                document.getElementById(`reward-text-${index}`).textContent = packetContents[index].text;
-            });
+            // 生成随机红包顺序
+            function generateRandomOrder() {
+                // 检查是否已有存储的随机顺序
+                let packetOrder = JSON.parse(localStorage.getItem('packetOrder') || 'null');
+                
+                // 如果没有存储的顺序，生成一个新的随机顺序
+                if (!packetOrder) {
+                    packetOrder = [...Array(packetContents.length).keys()];
+                    // Fisher-Yates 洗牌算法
+                    for (let i = packetOrder.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [packetOrder[i], packetOrder[j]] = [packetOrder[j], packetOrder[i]];
+                    }
+                    // 存储随机顺序
+                    localStorage.setItem('packetOrder', JSON.stringify(packetOrder));
+                }
+                
+                return packetOrder;
+            }
             
-            // 红包点击事件
-            redPackets.forEach(packet => {
-                packet.addEventListener('click', function() {
-                    const index = parseInt(this.getAttribute('data-index'));
+            // 创建红包元素
+            function createRedPackets() {
+                const packetOrder = generateRandomOrder();
+                
+                // 清空容器
+                redPacketsContainer.innerHTML = '';
+                
+                // 创建红包元素
+                packetOrder.forEach((contentIndex, positionIndex) => {
+                    const redPacket = document.createElement('div');
+                    redPacket.className = 'red-packet';
+                    redPacket.setAttribute('data-index', positionIndex);
+                    redPacket.setAttribute('data-content-index', contentIndex);
                     
-                    // 检查是否已翻开
-                    if (this.classList.contains('opened')) {
-                        return;
+                    const redPacketContent = document.createElement('div');
+                    redPacketContent.className = 'red-packet-content';
+                    
+                    const qrcodeContainer = document.createElement('div');
+                    qrcodeContainer.className = 'qrcode-container';
+                    
+                    const qrcodeImg = document.createElement('img');
+                    qrcodeImg.id = `qrcode-${positionIndex}`;
+                    qrcodeImg.src = packetContents[contentIndex].qrcodePath;
+                    qrcodeImg.alt = "二维码";
+                    qrcodeImg.loading = "lazy"; // 图片懒加载
+                    
+                    const rewardText = document.createElement('div');
+                    rewardText.className = 'reward-text';
+                    rewardText.id = `reward-text-${positionIndex}`;
+                    rewardText.textContent = packetContents[contentIndex].text;
+                    
+                    qrcodeContainer.appendChild(qrcodeImg);
+                    redPacketContent.appendChild(qrcodeContainer);
+                    redPacketContent.appendChild(rewardText);
+                    redPacket.appendChild(redPacketContent);
+                    redPacketsContainer.appendChild(redPacket);
+                    
+                    // 如果这个位置的红包已经翻开，标记为已翻开
+                    if (openedPackets.includes(positionIndex)) {
+                        redPacket.classList.add('opened');
                     }
-                    
-                    // 检查是否还有参与次数
-                    if (remainingCount <= 0) {
-                        alert('您已用完所有参与次数！');
-                        return;
-                    }
-                    
-                    // 翻开红包
-                    this.classList.add('opened');
-                    document.getElementById(`qrcode-${index}`).src = packetContents[index].qrcodePath;
-                    document.getElementById(`reward-text-${index}`).textContent = packetContents[index].text;
-                    
-                    // 记录已翻开的红包
-                    openedPackets.push(index);
-                    localStorage.setItem('openedPackets', JSON.stringify(openedPackets));
-                    
-                    // 减少剩余次数
-                    remainingCount--;
-                    remainingCountEl.textContent = remainingCount;
-                    localStorage.setItem('remainingCount', remainingCount);
-                    
-                    // 显示结果弹窗
-                    modalTitle.textContent = "恭喜您获得";
-                    modalText.textContent = packetContents[index].reward;
-                    modalQrcode.src = packetContents[index].qrcodePath;
-                    resultModal.style.display = 'flex';
                 });
-            });
+            }
+            
+            // 初始化页面
+            function initPage() {
+                // 初始化红包
+                createRedPackets();
+                
+                // 添加红包点击事件
+                redPacketsContainer.addEventListener('click', function(e) {
+                    const redPacket = e.target.closest('.red-packet');
+                    if (redPacket) {
+                        handleRedPacketClick.call(redPacket);
+                    }
+                });
+                
+                // 页面初始化完成后，异步预加载图片
+                const imageUrls = packetContents.map(content => content.qrcodePath);
+                preloadImages(imageUrls);
+            }
+            
+            // 红包点击事件处理
+            function handleRedPacketClick() {
+                const positionIndex = parseInt(this.getAttribute('data-index'));
+                const contentIndex = parseInt(this.getAttribute('data-content-index'));
+                
+                // 检查是否已翻开
+                if (this.classList.contains('opened')) {
+                    return;
+                }
+                
+                // 检查是否还有参与次数
+                if (remainingCount <= 0) {
+                    alert('您已用完所有参与次数！');
+                    return;
+                }
+                
+                // 翻开红包
+                this.classList.add('opened');
+                
+                // 记录已翻开的红包
+                openedPackets.push(positionIndex);
+                localStorage.setItem('openedPackets', JSON.stringify(openedPackets));
+                
+                // 减少剩余次数
+                remainingCount--;
+                remainingCountEl.textContent = remainingCount;
+                localStorage.setItem('remainingCount', remainingCount);
+                
+                // 显示结果弹窗
+                modalTitle.textContent = "恭喜您获得";
+                modalText.textContent = packetContents[contentIndex].reward;
+                modalQrcode.src = packetContents[contentIndex].qrcodePath;
+                resultModal.style.display = 'flex';
+            }
             
             // 关闭弹窗
             modalClose.addEventListener('click', function() {
@@ -442,6 +483,9 @@
                     resultModal.style.display = 'none';
                 }
             });
+            
+            // 初始化页面
+            initPage();
         });
     </script>
 </body>
