@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INMAN 茵曼 - 百万购衣津贴</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #f7d0d0 0%, #f0a8a8 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 750px;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header {
+            margin-bottom: 20px;
+        }
+        
+        .brand {
+            font-size: 36px;
+            font-weight: bold;
+            color: #c62f2f;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #c62f2f;
+            margin-bottom: 30px;
+        }
+        
+        .red-packets {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .red-packet {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background: linear-gradient(145deg, #e53935, #c62828);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 6px 15px rgba(198, 47, 47, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .red-packet:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40%;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .red-packet:after {
+            content: "开";
+            position: absolute;
+            color: #ffeb3b;
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .red-packet.opened {
+            background: linear-gradient(145deg, #f5f5f5, #e0e0e0);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .red-packet.opened:after {
+            content: "";
+        }
+        
+        .red-packet-content {
+            display: none;
+            width: 100%;
+            height: 100%;
+            padding: 10px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .red-packet.opened .red-packet-content {
+            display: flex;
+        }
+        
+        .qrcode-container {
+            width: 80%;
+            height: 70%;
+            background: #f5f5f5;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+        
+        .qrcode-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .reward-text {
+            font-size: 14px;
+            color: #c62f2f;
+            font-weight: bold;
+        }
+        
+        .rules {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .rules h3 {
+            color: #c62f2f;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .rules p {
+            margin-bottom: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .count-info {
+            margin: 15px 0;
+            font-size: 16px;
+            color: #c62f2f;
+            font-weight: bold;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 90%;
+            width: 400px;
+            text-align: center;
+            position: relative;
+            animation: popIn 0.3s ease;
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            color: #c62f2f;
+            margin-bottom: 20px;
+        }
+        
+        .modal-qrcode {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            background: #f5f5f5;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .modal-qrcode img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .modal-text {
+            margin: 15px 0;
+            font-size: 16px;
+            color: #333;
+        }
+        
+        .modal-close {
+            background: #c62f2f;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+        
+        .modal-close:hover {
+            background: #a62424;
+        }
+        
+        @media (max-width: 600px) {
+            .red-packets {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .brand {
+                font-size: 30px;
+            }
+            
+            .title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="brand">INMAN 茵曼</div>
+            <div class="title">百万购衣津贴</div>
+        </div>
+        
+        <div class="count-info">您还有 <span id="remaining-count">3</span> 次机会</div>
+        
+        <div class="red-packets">
+            <div class="red-packet" data-index="0">
+                <div class="red-packet-content">
+                    <div class="qrcode-container">
+                        <img id="qrcode-0" src="" alt="二维码">
+                    </div>
+                    <div class="reward-text" id="reward-text-0">扫码领取津贴</div>
+                </div>
+            </div>
+            <div class="red-packet" data-index="1">
+                <div class="red-packet-content">
+                    <div class="qrcode-container">
+                        <img id="qrcode-1" src="" alt="二维码">
+                    </div>
+                    <div class="reward-text" id="reward-text-1">扫码领取津贴</div>
+                </div>
+            </div>
+            <div class="red-packet" data-index="2">
+                <div class="red-packet-content">
+                    <div class="qrcode-container">
+                        <img id="qrcode-2" src="" alt="二维码">
+                    </div>
+                    <div class="reward-text" id="reward-text-2">扫码领取津贴</div>
+                </div>
+            </div>
+            <div class="red-packet" data-index="3">
+                <div class="red-packet-content">
+                    <div class="qrcode-container">
+                        <img id="qrcode-3" src="" alt="二维码">
+                    </div>
+                    <div class="reward-text" id="reward-text-3">扫码领取津贴</div>
+                </div>
+            </div>
+            <div class="red-packet" data-index="4">
+                <div class="red-packet-content">
+                    <div class="qrcode-container">
+                        <img id="qrcode-4" src="" alt="二维码">
+                    </div>
+                    <div class="reward-text" id="reward-text-4">扫码领取津贴</div>
+                </div>
+            </div>
+            <div class="red-packet" data-index="5">
+                <div class="red-packet-content">
+                    <div class="qrcode-container">
+                        <img id="qrcode-5" src="" alt="二维码">
+                    </div>
+                    <div class="reward-text" id="reward-text-5">扫码领取津贴</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="rules">
+            <h3>活动规则：</h3>
+            <p>翻开选择红包，领取购衣津贴</p>
+            <p>1、每个人限参与3次</p>
+            <p>2、每个权益限1次</p>
+        </div>
+    </div>
+    
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modal-title">恭喜您获得</div>
+            <div class="modal-text" id="modal-text">100元购衣津贴</div>
+            <div class="modal-qrcode">
+                <img id="modal-qrcode" src="" alt="二维码">
+            </div>
+            <div class="modal-text">茵曼会员直接领取</div>
+            <button class="modal-close" id="modal-close">确定</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const redPackets = document.querySelectorAll('.red-packet');
+            const resultModal = document.getElementById('result-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalText = document.getElementById('modal-text');
+            const modalQrcode = document.getElementById('modal-qrcode');
+            const modalClose = document.getElementById('modal-close');
+            const remainingCountEl = document.getElementById('remaining-count');
+            
+            // 红包内容配置 - 请修改这些路径为您的二维码图片路径
+            const packetContents = [
+                {
+                    reward: "10元无门槛",
+                    qrcodePath: "./images/1.png", // 替换为您的二维码图片路径
+                    text: "扫码领取10元无门槛津贴"
+                },
+                {
+                    reward: "20元(满500可用)",
+                    qrcodePath: "./images/2.png", // 替换为您的二维码图片路径
+                    text: "扫码领取20元津贴"
+                },
+                {
+                    reward: "50元(满1000元可用)",
+                    qrcodePath: "./images/3.png", // 替换为您的二维码图片路径
+                    text: "扫码领取50元津贴"
+                },
+                {
+                    reward: "100元(满2000元可用)",
+                    qrcodePath: "./images/4.png", // 替换为您的二维码图片路径
+                    text: "扫码领取100元津贴"
+                },
+                {
+                    reward: "留香珠5折权益(限2瓶)",
+                    qrcodePath: "./images/5.png", // 替换为您的二维码图片路径
+                    text: "扫码领取留香珠5折权益"
+                },
+                {
+                    reward: "留香珠体验装",
+                    qrcodePath: "./images/6.png", // 替换为您的二维码图片路径
+                    text: "扫码领取留香珠体验装"
+                }
+            ];
+            
+            // 从本地存储获取剩余次数和已翻开的红包
+            let remainingCount = localStorage.getItem('remainingCount') || 3;
+            let openedPackets = JSON.parse(localStorage.getItem('openedPackets') || '[]');
+            
+            // 更新显示
+            remainingCountEl.textContent = remainingCount;
+            
+            // 显示已翻开的红包
+            openedPackets.forEach(index => {
+                const packet = redPackets[index];
+                packet.classList.add('opened');
+                document.getElementById(`qrcode-${index}`).src = packetContents[index].qrcodePath;
+                document.getElementById(`reward-text-${index}`).textContent = packetContents[index].text;
+            });
+            
+            // 红包点击事件
+            redPackets.forEach(packet => {
+                packet.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    
+                    // 检查是否已翻开
+                    if (this.classList.contains('opened')) {
+                        return;
+                    }
+                    
+                    // 检查是否还有参与次数
+                    if (remainingCount <= 0) {
+                        alert('您已用完所有参与次数！');
+                        return;
+                    }
+                    
+                    // 翻开红包
+                    this.classList.add('opened');
+                    document.getElementById(`qrcode-${index}`).src = packetContents[index].qrcodePath;
+                    document.getElementById(`reward-text-${index}`).textContent = packetContents[index].text;
+                    
+                    // 记录已翻开的红包
+                    openedPackets.push(index);
+                    localStorage.setItem('openedPackets', JSON.stringify(openedPackets));
+                    
+                    // 减少剩余次数
+                    remainingCount--;
+                    remainingCountEl.textContent = remainingCount;
+                    localStorage.setItem('remainingCount', remainingCount);
+                    
+                    // 显示结果弹窗
+                    modalTitle.textContent = "恭喜您获得";
+                    modalText.textContent = packetContents[index].reward;
+                    modalQrcode.src = packetContents[index].qrcodePath;
+                    resultModal.style.display = 'flex';
+                });
+            });
+            
+            // 关闭弹窗
+            modalClose.addEventListener('click', function() {
+                resultModal.style.display = 'none';
+            });
+            
+            // 点击模态框外部关闭
+            resultModal.addEventListener('click', function(e) {
+                if (e.target === resultModal) {
+                    resultModal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
