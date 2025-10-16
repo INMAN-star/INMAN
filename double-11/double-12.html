@@ -385,13 +385,13 @@
     <!-- 开发环境工具 -->
     <div class="dev-tools" id="dev-tools" style="display: none;">
         <button class="dev-button" id="reset-button">清除本地数据</button>
-        <div class="dev-indicator">开发版 10.16.8</div>
+        <div class="dev-indicator">开发版 10.18.0</div>
     </div>
     
     <div class="container">
         <div class="header">
             <div class="logo">
-                <img id="brand-logo" src="./images/logo.png" alt="INMAN 茵曼" onerror="handleLogoError()">
+                <img id="brand-logo" src="https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/images/logo.webp" alt="INMAN 茵曼" onerror="handleLogoError(this)">
             </div>
         </div>
         
@@ -418,8 +418,8 @@
 
     <!-- 音频元素 -->
     <audio id="coin-sound" preload="auto">
-        <source src="./sounds/coin.mp3" type="audio/mpeg">
-        <source src="./sounds/coin.wav" type="audio/wav">
+        <source src="https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/sounds/coin.mp3" type="audio/mpeg">
+        <source src="https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/sounds/coin.wav" type="audio/wav">
         您的浏览器不支持音频元素。
     </audio>
 
@@ -434,32 +434,77 @@
                    window.location.hostname.includes('10.0.');
         }
         
-        // 图片预加载函数 - 异步执行，不阻塞页面初始化
-        function preloadImages(urls) {
+        // 图片预加载函数 - 支持双CDN回退
+        function preloadImagesWithFallback(imageConfigs) {
             // 使用setTimeout将预加载放到下一个事件循环，不阻塞页面渲染
             setTimeout(() => {
                 let loadedCount = 0;
-                let totalCount = urls.length;
+                let totalCount = imageConfigs.length;
                 
-                urls.forEach(url => {
+                if (totalCount === 0) {
+                    console.log('没有需要预加载的图片');
+                    return;
+                }
+                
+                imageConfigs.forEach(config => {
                     const img = new Image();
+                    
+                    // 先尝试CDN路径
                     img.onload = function() {
                         loadedCount++;
-                        console.log(`图片加载成功: ${url} (${loadedCount}/${totalCount})`);
+                        console.log(`图片加载成功 (CDN): ${config.cdnPath} (${loadedCount}/${totalCount})`);
                         if (loadedCount === totalCount) {
                             console.log('所有图片预加载完成');
                         }
                     };
+                    
                     img.onerror = function() {
-                        loadedCount++;
-                        console.error(`图片加载失败: ${url} (${loadedCount}/${totalCount})`);
-                        if (loadedCount === totalCount) {
-                            console.log('图片预加载完成（有失败项）');
-                        }
+                        // CDN加载失败，尝试本地路径
+                        console.warn(`CDN图片加载失败: ${config.cdnPath}，尝试本地路径: ${config.localPath}`);
+                        const fallbackImg = new Image();
+                        fallbackImg.onload = function() {
+                            loadedCount++;
+                            console.log(`图片加载成功 (本地): ${config.localPath} (${loadedCount}/${totalCount})`);
+                            if (loadedCount === totalCount) {
+                                console.log('所有图片预加载完成');
+                            }
+                        };
+                        fallbackImg.onerror = function() {
+                            loadedCount++;
+                            console.error(`本地图片加载失败: ${config.localPath} (${loadedCount}/${totalCount})`);
+                            if (loadedCount === totalCount) {
+                                console.log('图片预加载完成（有失败项）');
+                            }
+                        };
+                        fallbackImg.src = config.localPath;
                     };
-                    img.src = url;
+                    
+                    img.src = config.cdnPath;
                 });
             }, 100);
+        }
+        
+        // 设置图片src，支持双CDN回退
+        function setImageWithFallback(imgElement, cdnPath, localPath, onFinalError) {
+            // 先尝试CDN路径
+            imgElement.onload = function() {
+                console.log(`图片加载成功 (CDN): ${cdnPath}`);
+            };
+            
+            imgElement.onerror = function() {
+                // CDN加载失败，尝试本地路径
+                console.warn(`CDN图片加载失败: ${cdnPath}，尝试本地路径: ${localPath}`);
+                imgElement.onload = function() {
+                    console.log(`图片加载成功 (本地): ${localPath}`);
+                };
+                imgElement.onerror = function() {
+                    console.error(`本地图片加载失败: ${localPath}`);
+                    if (onFinalError) onFinalError();
+                };
+                imgElement.src = localPath;
+            };
+            
+            imgElement.src = cdnPath;
         }
         
         // 创建金币雨特效 - 使用红包当前位置
@@ -508,12 +553,16 @@
         }
         
         // 处理LOGO图片加载错误
-        function handleLogoError() {
-            const logoImg = document.getElementById('brand-logo');
-            // 如果LOGO加载失败，显示文字标题
-            logoImg.style.display = 'none';
-            const logoContainer = document.querySelector('.logo');
-            logoContainer.innerHTML = '<div class="brand" style="font-size: 36px; font-weight: bold; color: #c62f2f;">INMAN 茵曼</div>';
+        function handleLogoError(imgElement) {
+            // 尝试本地路径
+            console.warn('LOGO CDN加载失败，尝试本地路径');
+            imgElement.onerror = function() {
+                // 如果本地路径也失败，显示文字标题
+                imgElement.style.display = 'none';
+                const logoContainer = document.querySelector('.logo');
+                logoContainer.innerHTML = '<div class="brand" style="font-size: 36px; font-weight: bold; color: #c62f2f;">INMAN 茵曼</div>';
+            };
+            imgElement.src = './images/logo.webp';
         }
         
         // 处理弹窗图片加载错误
@@ -543,11 +592,16 @@
         
         // 处理红包封面图片加载错误
         function handleRedPacketCoverError(element) {
-            // 如果红包封面图片加载失败，使用默认样式
-            element.style.display = 'none';
-            const redPacket = element.parentNode;
-            redPacket.style.background = 'linear-gradient(145deg, #e53935, #c62828)';
-            redPacket.innerHTML += '<div style="position:absolute;color:#ffeb3b;font-size:28px;font-weight:bold;text-shadow:1px 1px 3px rgba(0,0,0,0.3);">开</div>';
+            // 尝试本地路径
+            console.warn('红包封面CDN加载失败，尝试本地路径');
+            element.onerror = function() {
+                // 如果本地路径也失败，使用默认样式
+                element.style.display = 'none';
+                const redPacket = element.parentNode;
+                redPacket.style.background = 'linear-gradient(145deg, #e53935, #c62828)';
+                redPacket.innerHTML += '<div style="position:absolute;color:#ffeb3b;font-size:28px;font-weight:bold;text-shadow:1px 1px 3px rgba(0,0,0,0.3);">开</div>';
+            };
+            element.src = './images/red-packet-cover.webp';
         }
         
         // 红包飞入动画
@@ -581,42 +635,69 @@
                 console.log('当前运行在生产环境');
             }
             
-            // 红包内容配置 - 使用CDN路径
+            // 红包内容配置 - 使用WEBP格式，支持双CDN回退
             const packetContents = [
                 {
-                    qrcodePath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/1.webp",
+                    cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/1.webp",
+                    localPath: "./imageswebp/1.webp",
                     text: "扫码领取津贴",
-                    modalImagePath: "./images/modal-content-1.png"
+                    modalImage: {
+                        cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/modal-content-1.webp",
+                        localPath: "./imageswebp/modal-content-1.webp"
+                    }
                 },
                 {
-                    qrcodePath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/2.webp",
+                    cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/2.webp",
+                    localPath: "./imageswebp/2.webp",
                     text: "扫码领取津贴",
-                    modalImagePath: "./images/modal-content-2.png"
+                    modalImage: {
+                        cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/modal-content-2.webp",
+                        localPath: "./imageswebp/modal-content-2.webp"
+                    }
                 },
                 {
-                    qrcodePath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/3.webp",
+                    cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/3.webp",
+                    localPath: "./imageswebp/3.webp",
                     text: "扫码领取津贴",
-                    modalImagePath: "./images/modal-content-3.png"
+                    modalImage: {
+                        cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/modal-content-3.webp",
+                        localPath: "./imageswebp/modal-content-3.webp"
+                    }
                 },
                 {
-                    qrcodePath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/4.webp",
+                    cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/4.webp",
+                    localPath: "./imageswebp/4.webp",
                     text: "扫码领取津贴",
-                    modalImagePath: "./images/modal-content-4.png"
+                    modalImage: {
+                        cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/modal-content-4.webp",
+                        localPath: "./imageswebp/modal-content-4.webp"
+                    }
                 },
                 {
-                    qrcodePath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/5.webp",
+                    cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/5.webp",
+                    localPath: "./imageswebp/5.webp",
                     text: "扫码领取津贴",
-                    modalImagePath: "./images/modal-content-5.png"
+                    modalImage: {
+                        cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/modal-content-5.webp",
+                        localPath: "./imageswebp/modal-content-5.webp"
+                    }
                 },
                 {
-                    qrcodePath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/6.webp",
+                    cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/6.webp",
+                    localPath: "./imageswebp/6.webp",
                     text: "扫码领取津贴",
-                    modalImagePath: "./images/modal-content-6.png"
+                    modalImage: {
+                        cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/modal-content-6.webp",
+                        localPath: "./imageswebp/modal-content-6.webp"
+                    }
                 }
             ];
             
-            // 红包封面图片路径
-            const redPacketCoverPath = "./images/red-packet-cover.png";
+            // 红包封面图片路径 - 使用WEBP格式，支持双CDN回退
+            const redPacketCoverConfig = {
+                cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/images/red-packet-cover.webp",
+                localPath: "./images/red-packet-cover.webp"
+            };
             
             // 从本地存储获取剩余次数和已翻开的红包
             let remainingCount = localStorage.getItem('remainingCount') || 3;
@@ -659,11 +740,17 @@
                     // 红包封面
                     const redPacketCover = document.createElement('img');
                     redPacketCover.className = 'red-packet-cover';
-                    redPacketCover.src = redPacketCoverPath;
                     redPacketCover.alt = "红包封面";
-                    redPacketCover.onerror = function() {
-                        handleRedPacketCoverError(this);
-                    };
+                    
+                    // 设置红包封面图片，支持双CDN回退
+                    setImageWithFallback(
+                        redPacketCover,
+                        redPacketCoverConfig.cdnPath,
+                        redPacketCoverConfig.localPath,
+                        function() {
+                            handleRedPacketCoverError(redPacketCover);
+                        }
+                    );
                     
                     const redPacketContent = document.createElement('div');
                     redPacketContent.className = 'red-packet-content';
@@ -673,9 +760,18 @@
                     
                     const qrcodeImg = document.createElement('img');
                     qrcodeImg.id = `qrcode-${positionIndex}`;
-                    qrcodeImg.src = packetContents[contentIndex].qrcodePath;
                     qrcodeImg.alt = "二维码";
                     qrcodeImg.loading = "lazy"; // 图片懒加载
+                    
+                    // 设置二维码图片，支持双CDN回退
+                    setImageWithFallback(
+                        qrcodeImg,
+                        packetContents[contentIndex].cdnPath,
+                        packetContents[contentIndex].localPath,
+                        function() {
+                            console.error(`二维码图片加载失败: ${packetContents[contentIndex].cdnPath} 和 ${packetContents[contentIndex].localPath}`);
+                        }
+                    );
                     
                     const rewardText = document.createElement('div');
                     rewardText.className = 'reward-text';
@@ -713,15 +809,26 @@
                 });
                 
                 // 页面初始化完成后，异步预加载图片
-                const imageUrls = packetContents.map(content => content.qrcodePath);
-                imageUrls.push(redPacketCoverPath);
+                const imageConfigs = [];
                 
-                // 预加载所有弹窗图片
+                // 添加红包封面
+                imageConfigs.push(redPacketCoverConfig);
+                
+                // 添加所有二维码图片
                 packetContents.forEach(content => {
-                    imageUrls.push(content.modalImagePath);
+                    imageConfigs.push({
+                        cdnPath: content.cdnPath,
+                        localPath: content.localPath
+                    });
                 });
                 
-                preloadImages(imageUrls);
+                // 添加所有弹窗图片
+                packetContents.forEach(content => {
+                    imageConfigs.push(content.modalImage);
+                });
+                
+                console.log('开始预加载图片:', imageConfigs);
+                preloadImagesWithFallback(imageConfigs);
             }
             
             // 红包点击事件处理
@@ -763,15 +870,16 @@
                     localStorage.setItem('remainingCount', remainingCount);
                     
                     // 显示结果弹窗
-                    const modalImageUrl = packetContents[contentIndex].modalImagePath;
-                    console.log('设置弹窗图片路径:', modalImageUrl);
+                    const modalImageConfig = packetContents[contentIndex].modalImage;
+                    console.log('设置弹窗图片路径:', modalImageConfig);
                     
-                    // 先设置onload和onerror事件，再设置src
-                    modalImage.onload = function() {
-                        console.log('弹窗图片加载成功');
-                    };
-                    modalImage.onerror = handleModalImageError;
-                    modalImage.src = modalImageUrl;
+                    // 设置弹窗图片，支持双CDN回退
+                    setImageWithFallback(
+                        modalImage,
+                        modalImageConfig.cdnPath,
+                        modalImageConfig.localPath,
+                        handleModalImageError
+                    );
                     
                     resultModal.style.display = 'flex';
                 }, 800);
