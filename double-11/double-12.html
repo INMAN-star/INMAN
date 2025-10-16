@@ -13,7 +13,7 @@
         
         body {
             font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-            background: #FFD5AF;
+            background: linear-gradient(to bottom, #D1493B 0%, #E48C72 50%, #E8947A 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -47,8 +47,9 @@
         .description {
             font-size: 22px;
             font-weight: bold;
-            color: #c62f2f;
+            color: #fff;
             margin: 20px 0;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
         }
         
         .red-packets {
@@ -181,7 +182,7 @@
         }
         
         .rules {
-            background: transparent;
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 10px;
             padding: 20px;
             margin: 20px 0;
@@ -189,7 +190,9 @@
             opacity: 0;
             transform: translateY(20px);
             transition: all 0.5s ease 0.8s;
-            color: #333;
+            color: #fff;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
         
         .rules.animate-in {
@@ -198,16 +201,18 @@
         }
         
         .rules h3 {
-            color: #c62f2f;
+            color: #fff;
             margin-bottom: 10px;
             font-size: 18px;
             text-align: left;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
         }
         
         .rules p {
             margin-bottom: 8px;
             font-size: 14px;
             line-height: 1.5;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
         }
         
         .modal {
@@ -385,7 +390,7 @@
     <!-- 开发环境工具 -->
     <div class="dev-tools" id="dev-tools" style="display: none;">
         <button class="dev-button" id="reset-button">清除本地数据</button>
-        <div class="dev-indicator">开发版 10.18.0</div>
+        <div class="dev-indicator">开发版 10.19.0</div>
     </div>
     
     <div class="container">
@@ -560,7 +565,7 @@
                 // 如果本地路径也失败，显示文字标题
                 imgElement.style.display = 'none';
                 const logoContainer = document.querySelector('.logo');
-                logoContainer.innerHTML = '<div class="brand" style="font-size: 36px; font-weight: bold; color: #c62f2f;">INMAN 茵曼</div>';
+                logoContainer.innerHTML = '<div class="brand" style="font-size: 36px; font-weight: bold; color: #fff;">INMAN 茵曼</div>';
             };
             imgElement.src = './images/logo.webp';
         }
