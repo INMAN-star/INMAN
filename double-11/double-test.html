@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <title>INMAN 茵曼 - 购衣津贴</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(to bottom, #D1493B 0%, #E48C72 50%, #E8947A 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #333;
+            padding: 20px;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .container {
+            max-width: 750px;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header {
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            max-width: 300px;
+            margin: 0 auto 10px;
+        }
+        
+        .logo img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .description {
+            font-size: 22px;
+            font-weight: bold;
+            color: #fff;
+            margin: 20px 0;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .red-packets {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .red-packet {
+            width: 100%;
+            aspect-ratio: 200/280;
+            background: transparent;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            perspective: 1000px;
+            opacity: 0;
+            transform: translateX(-100px) rotate(-180deg);
+        }
+        
+        .red-packet.animate-in {
+            animation: packetFlyIn 1.8s ease-out forwards;
+        }
+        
+        @keyframes packetFlyIn {
+            0% {
+                opacity: 0;
+                transform: translateX(-300px) rotate(-180deg) scale(0.5);
+            }
+            60% {
+                opacity: 1;
+                transform: translateX(20px) rotate(10deg) scale(1.05);
+            }
+            80% {
+                opacity: 1;
+                transform: translateX(-5px) rotate(-5deg) scale(1.02);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0) rotate(0deg) scale(1);
+            }
+        }
+        
+        .red-packet-cover {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: all 0.5s ease;
+            transform-style: preserve-3d;
+        }
+        
+        .red-packet.opened .red-packet-cover {
+            opacity: 0;
+            transform: rotateY(180deg) scale(0.8);
+        }
+        
+        .red-packet-content {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transform: scale(0.8);
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .red-packet.opened .red-packet-content {
+            display: flex;
+            transform: scale(1);
+            opacity: 1;
+            animation: contentAppear 0.5s ease forwards;
+        }
+        
+        @keyframes contentAppear {
+            0% {
+                transform: scale(0.8) rotateY(-90deg);
+                opacity: 0;
+            }
+            70% {
+                transform: scale(1.05) rotateY(10deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1) rotateY(0deg);
+                opacity: 1;
+            }
+        }
+        
+        .content-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        
+        .rules {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease 0.8s;
+            color: #fff;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .rules.animate-in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .rules h3 {
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 18px;
+            text-align: left;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .rules p {
+            margin-bottom: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: transparent;
+            border-radius: 15px;
+            padding: 0;
+            max-width: 90%;
+            width: 350px;
+            height: 490px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            animation: popIn 0.5s ease;
+        }
+        
+        .modal-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 15px;
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0.8) translateY(20px); opacity: 0; }
+            70% { transform: scale(1.05) translateY(-5px); }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        
+        /* 关闭按钮样式 */
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            border: none;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .modal-close:hover {
+            background: #f5f5f5;
+            color: #c62f2f;
+        }
+        
+        /* 红包打开特效 */
+        .red-packet.open-animation {
+            animation: openPacket 0.8s ease forwards;
+        }
+        
+        @keyframes openPacket {
+            0% {
+                transform: scale(1);
+            }
+            30% {
+                transform: translateY(-20px) scale(1.1) rotate(5deg);
+            }
+            60% {
+                transform: translateY(0) scale(1.05) rotate(-5deg);
+            }
+            80% {
+                transform: translateY(-10px) scale(1.08) rotate(3deg);
+            }
+            100% {
+                transform: translateY(0) scale(1) rotate(0deg);
+            }
+        }
+        
+        /* 金币雨特效 */
+        .coin {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle at 30% 30%, #ffd700, #ff9800);
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ffd700;
+            z-index: 10;
+            animation: coinFall 1s ease-out forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes coinFall {
+            0% {
+                transform: translateY(-20px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        /* 开发环境提示 */
+        .dev-tools {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+        
+        .dev-button {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-bottom: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .dev-button:hover {
+            background: #f57c00;
+        }
+        
+        .dev-indicator {
+            background: #ff5722;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        /* 加载提示 */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 600px) {
+            .red-packets {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .logo {
+                max-width: 250px;
+            }
+            
+            .description {
+                font-size: 20px;
+            }
+            
+            .dev-tools {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin-bottom: 15px;
+            }
+            
+            .modal-content {
+                width: 300px;
+                height: 420px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 加载提示 -->
+    <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <div>页面加载中...</div>
+    </div>
+    
+    <!-- 开发环境工具 -->
+    <div class="dev-tools" id="dev-tools" style="display: none;">
+        <button class="dev-button" id="reset-button">清除本地数据</button>
+        <div class="dev-indicator">开发版 10.20.1</div>
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <img id="brand-logo" src="https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/images/logo.webp" alt="INMAN 茵曼" onerror="handleLogoError(this)">
+            </div>
+        </div>
+        
+        <div class="description">翻一翻，领取你的购衣津贴</div>
+        
+        <div class="red-packets" id="red-packets-container">
+            <!-- 红包将通过JavaScript动态生成 -->
+        </div>
+        
+        <div class="rules" id="rules">
+            <h3>活动规则</h3>
+            <p>1、每人可参与3次;</p>
+            <p>2、各项权益数量有限，先到先得;</p>
+            <p>3、使用范围见权益规则说明。</p>
+        </div>
+    </div>
+    
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="modal-close">×</button>
+            <img class="modal-image" id="modal-image" src="" alt="弹窗内容">
+        </div>
+    </div>
+
+    <!-- 音频元素 -->
+    <audio id="coin-sound" preload="auto">
+        <source src="https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/sounds/coin.mp3" type="audio/mpeg">
+        <source src="https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/sounds/coin.wav" type="audio/wav">
+        您的浏览器不支持音频元素。
+    </audio>
+
+    <script>
+        // 版本控制 - 每次更新修改此版本号
+        const VERSION = "10.20.1";
+        
+        // 检测是否为开发环境
+        function isDevelopmentEnvironment() {
+            // 检查是否为本地文件或本地服务器
+            return window.location.hostname === 'localhost' || 
+                   window.location.hostname === '127.0.0.1' || 
+                   window.location.protocol === 'file:' ||
+                   window.location.hostname.includes('192.168.') ||
+                   window.location.hostname.includes('10.0.');
+        }
+        
+        // 图片预加载函数 - 支持双CDN回退
+        function preloadImagesWithFallback(imageConfigs) {
+            return new Promise((resolve) => {
+                let loadedCount = 0;
+                let totalCount = imageConfigs.length;
+                
+                if (totalCount === 0) {
+                    console.log('没有需要预加载的图片');
+                    resolve();
+                    return;
+                }
+                
+                imageConfigs.forEach(config => {
+                    const img = new Image();
+                    
+                    // 先尝试CDN路径
+                    img.onload = function() {
+                        loadedCount++;
+                        console.log(`图片加载成功 (CDN): ${config.cdnPath} (${loadedCount}/${totalCount})`);
+                        if (loadedCount === totalCount) {
+                            console.log('所有图片预加载完成');
+                            resolve();
+                        }
+                    };
+                    
+                    img.onerror = function() {
+                        // CDN加载失败，尝试本地路径
+                        console.warn(`CDN图片加载失败: ${config.cdnPath}，尝试本地路径: ${config.localPath}`);
+                        const fallbackImg = new Image();
+                        fallbackImg.onload = function() {
+                            loadedCount++;
+                            console.log(`图片加载成功 (本地): ${config.localPath} (${loadedCount}/${totalCount})`);
+                            if (loadedCount === totalCount) {
+                                console.log('所有图片预加载完成');
+                                resolve();
+                            }
+                        };
+                        fallbackImg.onerror = function() {
+                            loadedCount++;
+                            console.error(`本地图片加载失败: ${config.localPath} (${loadedCount}/${totalCount})`);
+                            if (loadedCount === totalCount) {
+                                console.log('图片预加载完成（有失败项）');
+                                resolve();
+                            }
+                        };
+                        fallbackImg.src = config.localPath;
+                    };
+                    
+                    img.src = config.cdnPath;
+                });
+            });
+        }
+        
+        // 设置图片src，支持双CDN回退
+        function setImageWithFallback(imgElement, cdnPath, localPath, onFinalError) {
+            // 先尝试CDN路径
+            imgElement.onload = function() {
+                console.log(`图片加载成功 (CDN): ${cdnPath}`);
+            };
+            
+            imgElement.onerror = function() {
+                // CDN加载失败，尝试本地路径
+                console.warn(`CDN图片加载失败: ${cdnPath}，尝试本地路径: ${localPath}`);
+                imgElement.onload = function() {
+                    console.log(`图片加载成功 (本地): ${localPath}`);
+                };
+                imgElement.onerror = function() {
+                    console.error(`本地图片加载失败: ${localPath}`);
+                    if (onFinalError) onFinalError();
+                };
+                imgElement.src = localPath;
+            };
+            
+            imgElement.src = cdnPath;
+        }
+        
+        // 创建金币雨特效 - 使用红包当前位置
+        function createCoinRain(element, count = 8) {
+            // 获取红包在视口中的位置
+            const rect = element.getBoundingClientRect();
+            
+            // 计算红包中心位置
+            const centerX = rect.left + rect.width / 2;
+            const topY = rect.top;
+            
+            for (let i = 0; i < count; i++) {
+                const coin = document.createElement('div');
+                coin.className = 'coin';
+                
+                // 随机位置，以红包中心为基准
+                const left = centerX - 10 + (Math.random() - 0.5) * 100;
+                coin.style.left = `${left}px`;
+                coin.style.top = `${topY}px`;
+                
+                // 随机延迟
+                coin.style.animationDelay = `${Math.random() * 0.5}s`;
+                
+                document.body.appendChild(coin);
+                
+                // 动画结束后移除金币
+                setTimeout(() => {
+                    if (coin.parentNode) {
+                        coin.parentNode.removeChild(coin);
+                    }
+                }, 1000);
+            }
+        }
+        
+        // 播放金币洒落声音
+        function playCoinSound() {
+            const coinSound = document.getElementById('coin-sound');
+            if (coinSound) {
+                // 重置音频到开始位置
+                coinSound.currentTime = 0;
+                // 播放声音
+                coinSound.play().catch(e => {
+                    console.log('音频播放失败:', e);
+                });
+            }
+        }
+        
+        // 处理LOGO图片加载错误
+        function handleLogoError(imgElement) {
+            // 尝试本地路径
+            console.warn('LOGO CDN加载失败，尝试本地路径');
+            imgElement.onerror = function() {
+                // 如果本地路径也失败，显示文字标题
+                imgElement.style.display = 'none';
+                const logoContainer = document.querySelector('.logo');
+                logoContainer.innerHTML = '<div class="brand" style="font-size: 36px; font-weight: bold; color: #fff;">INMAN 茵曼</div>';
+            };
+            imgElement.src = './images/logo.webp?v=' + VERSION;
+        }
+        
+        // 处理弹窗图片加载错误
+        function handleModalImageError() {
+            console.log('弹窗图片加载失败，使用备用样式');
+            const modalImg = document.getElementById('modal-image');
+            // 如果弹窗图片加载失败，使用默认样式
+            modalImg.style.display = 'none';
+            const modalContent = document.querySelector('.modal-content');
+            modalContent.style.background = 'white';
+            modalContent.style.padding = '30px';
+            modalContent.innerHTML = `
+                <button class="modal-close" id="modal-close">×</button>
+                <div class="modal-title" style="font-size: 24px; color: #c62f2f; margin-bottom: 20px; margin-top: 30px;">购物津贴</div>
+                <div class="modal-qrcode" style="width: 180px; height: 180px; margin: 20px auto; background: #f5f5f5; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);">
+                    <img id="modal-qrcode" src="" alt="二维码">
+                </div>
+                <div class="modal-text" style="margin: 15px 0; font-size: 16px; color: #333;">长按识别二维码领取</div>
+            `;
+            
+            // 重新绑定关闭按钮事件
+            const newCloseButton = document.getElementById('modal-close');
+            if (newCloseButton) {
+                newCloseButton.addEventListener('click', closeModal);
+            }
+        }
+        
+        // 处理红包封面图片加载错误
+        function handleRedPacketCoverError(element) {
+            // 尝试本地路径
+            console.warn('红包封面CDN加载失败，尝试本地路径');
+            element.onerror = function() {
+                // 如果本地路径也失败，使用默认样式
+                element.style.display = 'none';
+                const redPacket = element.parentNode;
+                redPacket.style.background = 'linear-gradient(145deg, #e53935, #c62828)';
+                redPacket.innerHTML += '<div style="position:absolute;color:#ffeb3b;font-size:28px;font-weight:bold;text-shadow:1px 1px 3px rgba(0,0,0,0.3);">开</div>';
+            };
+            element.src = './images/red-packet-cover.webp?v=' + VERSION;
+        }
+        
+        // 红包飞入动画
+        function animateRedPackets() {
+            const redPackets = document.querySelectorAll('.red-packet');
+            // 所有红包同时飞入
+            redPackets.forEach(packet => {
+                packet.classList.add('animate-in');
+            });
+            
+            // 显示规则
+            setTimeout(() => {
+                document.getElementById('rules').classList.add('animate-in');
+            }, 800);
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const redPacketsContainer = document.getElementById('red-packets-container');
+            const resultModal = document.getElementById('result-modal');
+            const modalClose = document.getElementById('modal-close');
+            const modalImage = document.getElementById('modal-image');
+            const devTools = document.getElementById('dev-tools');
+            const resetButton = document.getElementById('reset-button');
+            const loading = document.getElementById('loading');
+            
+            // 检查是否为开发环境
+            const isDev = isDevelopmentEnvironment();
+            if (isDev) {
+                devTools.style.display = 'block';
+                console.log('当前运行在开发环境');
+            } else {
+                console.log('当前运行在生产环境');
+            }
+            
+            // 红包内容配置 - 使用WEBP格式，支持双CDN回退
+            const packetContents = [
+                {
+                    text: "购物津贴",
+                    modalImage: {
+                        cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/modal-content-1.webp?v=" + VERSION,
+                        localPath: "./imageswebp/modal-content-1.webp?v=" + VERSION
+                    }
+                },
+                {
+                    text: "购物津贴",
+                    modalImage: {
+                        cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/modal-content-2.webp?v=" + VERSION,
+                        localPath: "./imageswebp/modal-content-2.webp?v=" + VERSION
+                    }
+                },
+                {
+                    text: "购物津贴",
+                    modalImage: {
+                        cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/modal-content-3.webp?v=" + VERSION,
+                        localPath: "./imageswebp/modal-content-3.webp?v=" + VERSION
+                    }
+                },
+                {
+                    text: "购物津贴",
+                    modalImage: {
+                        cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/modal-content-4.webp?v=" + VERSION,
+                        localPath: "./imageswebp/modal-content-4.webp?v=" + VERSION
+                    }
+                },
+                {
+                    text: "购物津贴",
+                    modalImage: {
+                        cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/modal-content-5.webp?v=" + VERSION,
+                        localPath: "./imageswebp/modal-content-5.webp?v=" + VERSION
+                    }
+                },
+                {
+                    text: "购物津贴",
+                    modalImage: {
+                        cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/imageswebp/modal-content-6.webp?v=" + VERSION,
+                        localPath: "./imageswebp/modal-content-6.webp?v=" + VERSION
+                    }
+                }
+            ];
+            
+            // 红包封面图片路径 - 使用WEBP格式，支持双CDN回退
+            const redPacketCoverConfig = {
+                cdnPath: "https://cdn.jsdelivr.net/gh/INMAN-star/INMAN/double-11/images/red-packet-cover.webp?v=" + VERSION,
+                localPath: "./images/red-packet-cover.webp?v=" + VERSION
+            };
+            
+            // 从本地存储获取剩余次数和已翻开的红包
+            let remainingCount = localStorage.getItem('remainingCount') || 3;
+            let openedPackets = JSON.parse(localStorage.getItem('openedPackets') || '[]');
+            
+            // 生成随机红包顺序
+            function generateRandomOrder() {
+                // 检查是否已有存储的随机顺序
+                let packetOrder = JSON.parse(localStorage.getItem('packetOrder') || 'null');
+                
+                // 如果没有存储的顺序，生成一个新的随机顺序
+                if (!packetOrder) {
+                    packetOrder = [...Array(packetContents.length).keys()];
+                    // Fisher-Yates 洗牌算法
+                    for (let i = packetOrder.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [packetOrder[i], packetOrder[j]] = [packetOrder[j], packetOrder[i]];
+                    }
+                    // 存储随机顺序
+                    localStorage.setItem('packetOrder', JSON.stringify(packetOrder));
+                }
+                
+                return packetOrder;
+            }
+            
+            // 创建红包元素
+            function createRedPackets() {
+                const packetOrder = generateRandomOrder();
+                
+                // 清空容器
+                redPacketsContainer.innerHTML = '';
+                
+                // 创建红包元素
+                packetOrder.forEach((contentIndex, positionIndex) => {
+                    const redPacket = document.createElement('div');
+                    redPacket.className = 'red-packet';
+                    redPacket.setAttribute('data-index', positionIndex);
+                    redPacket.setAttribute('data-content-index', contentIndex);
+                    
+                    // 红包封面
+                    const redPacketCover = document.createElement('img');
+                    redPacketCover.className = 'red-packet-cover';
+                    redPacketCover.alt = "红包封面";
+                    
+                    // 设置红包封面图片，支持双CDN回退
+                    setImageWithFallback(
+                        redPacketCover,
+                        redPacketCoverConfig.cdnPath,
+                        redPacketCoverConfig.localPath,
+                        function() {
+                            handleRedPacketCoverError(redPacketCover);
+                        }
+                    );
+                    
+                    const redPacketContent = document.createElement('div');
+                    redPacketContent.className = 'red-packet-content';
+                    
+                    // 创建内容图片
+                    const contentImg = document.createElement('img');
+                    contentImg.className = 'content-image';
+                    contentImg.alt = "红包内容";
+                    
+                    // 设置内容图片，支持双CDN回退
+                    setImageWithFallback(
+                        contentImg,
+                        packetContents[contentIndex].modalImage.cdnPath,
+                        packetContents[contentIndex].modalImage.localPath,
+                        function() {
+                            console.error(`内容图片加载失败: ${packetContents[contentIndex].modalImage.cdnPath} 和 ${packetContents[contentIndex].modalImage.localPath}`);
+                        }
+                    );
+                    
+                    redPacketContent.appendChild(contentImg);
+                    redPacket.appendChild(redPacketCover);
+                    redPacket.appendChild(redPacketContent);
+                    redPacketsContainer.appendChild(redPacket);
+                    
+                    // 如果这个位置的红包已经翻开，标记为已翻开
+                    if (openedPackets.includes(positionIndex)) {
+                        redPacket.classList.add('opened');
+                    }
+                });
+                
+                // 添加红包飞入动画
+                setTimeout(animateRedPackets, 300);
+            }
+            
+            // 初始化页面
+            async function initPage() {
+                try {
+                    // 页面初始化完成后，异步预加载图片
+                    const imageConfigs = [];
+                    
+                    // 添加红包封面
+                    imageConfigs.push(redPacketCoverConfig);
+                    
+                    // 添加所有弹窗图片
+                    packetContents.forEach(content => {
+                        imageConfigs.push(content.modalImage);
+                    });
+                    
+                    console.log('开始预加载图片:', imageConfigs);
+                    await preloadImagesWithFallback(imageConfigs);
+                    
+                    // 初始化红包
+                    createRedPackets();
+                    
+                    // 添加红包点击事件
+                    redPacketsContainer.addEventListener('click', function(e) {
+                        const redPacket = e.target.closest('.red-packet');
+                        if (redPacket) {
+                            handleRedPacketClick.call(redPacket);
+                        }
+                    });
+                    
+                    // 隐藏加载提示
+                    setTimeout(() => {
+                        loading.style.display = 'none';
+                    }, 500);
+                    
+                } catch (error) {
+                    console.error('页面初始化失败:', error);
+                    loading.innerHTML = '<div>页面加载失败，请刷新重试</div>';
+                }
+            }
+            
+            // 红包点击事件处理
+            function handleRedPacketClick() {
+                const positionIndex = parseInt(this.getAttribute('data-index'));
+                const contentIndex = parseInt(this.getAttribute('data-content-index'));
+                
+                // 检查是否已翻开
+                if (this.classList.contains('opened')) {
+                    return;
+                }
+                
+                // 检查是否还有参与次数
+                if (remainingCount <= 0) {
+                    alert('您已用完所有参与次数！');
+                    return;
+                }
+                
+                // 添加开红包动画
+                this.classList.add('open-animation');
+                
+                // 播放金币洒落声音
+                playCoinSound();
+                
+                // 创建金币雨特效
+                createCoinRain(this);
+                
+                // 动画结束后显示内容
+                setTimeout(() => {
+                    this.classList.remove('open-animation');
+                    this.classList.add('opened');
+                    
+                    // 记录已翻开的红包
+                    openedPackets.push(positionIndex);
+                    localStorage.setItem('openedPackets', JSON.stringify(openedPackets));
+                    
+                    // 减少剩余次数
+                    remainingCount--;
+                    localStorage.setItem('remainingCount', remainingCount);
+                    
+                    // 显示结果弹窗
+                    const modalImageConfig = packetContents[contentIndex].modalImage;
+                    console.log('设置弹窗图片路径:', modalImageConfig);
+                    
+                    // 设置弹窗图片，支持双CDN回退
+                    setImageWithFallback(
+                        modalImage,
+                        modalImageConfig.cdnPath,
+                        modalImageConfig.localPath,
+                        handleModalImageError
+                    );
+                    
+                    resultModal.style.display = 'flex';
+                }, 800);
+            }
+            
+            // 清除本地数据
+            function resetLocalData() {
+                localStorage.removeItem('remainingCount');
+                localStorage.removeItem('openedPackets');
+                localStorage.removeItem('packetOrder');
+                alert('本地数据已清除，页面将刷新');
+                location.reload();
+            }
+            
+            // 关闭弹窗
+            function closeModal() {
+                resultModal.style.display = 'none';
+            }
+            
+            modalClose.addEventListener('click', closeModal);
+            
+            // 点击模态框外部关闭
+            resultModal.addEventListener('click', function(e) {
+                if (e.target === resultModal) {
+                    closeModal();
+                }
+            });
+            
+            // 开发环境功能：清除本地数据
+            if (isDev) {
+                resetButton.addEventListener('click', resetLocalData);
+            }
+            
+            // 初始化页面
+            initPage();
+        });
+    </script>
+</body>
+</html>
